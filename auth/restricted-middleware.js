@@ -1,0 +1,25 @@
+const jwt = require('jsonwebtoken');
+
+const secrets = require('../config/secrets')
+
+
+
+module.exports = (req, res, next) => {
+  const token = req.headers.authorization;
+  
+
+  jwt.verify(token,secrets.jwtSecret,(err, decodedToken) =>{
+    if(err) {
+      //token is not valid or expired
+      console.log('restriced middleware says ')
+      res.status(401).json({you:'shall not pass!!!'})
+
+    } else {
+      // the token is valid and we can read the decodedToken
+      req.decodedToken = decodedToken
+      next();
+    }
+  });
+}
+
+//user 1---> roles

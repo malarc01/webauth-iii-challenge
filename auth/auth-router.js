@@ -2,7 +2,7 @@ const router = require('express').Router()
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const secrets= require('../config/secrets')
-
+const restricted = require('../auth/restricted-middleware.js');
 const DatabaseTableModel = require('../users/users-model')
 
 // endpoints for '/api/register'
@@ -46,6 +46,33 @@ router.post('/login', (req, res) => {
       res.status(500).json(error);
     });
 });
+
+router.get('/users', restricted, checkRole('student'),(req, res) => {
+  DatabaseTableModel.find()
+  .then(users=>{
+    res.json({users});
+  })
+  .catch(error => {
+    console.log(error)
+    res.status(500).json(error);
+  });
+});
+
+function checkRole(role){
+  return function(req, res, next){
+    if(req.decodedToken &&
+      req.decodedToken.roles &&
+      req.decodedToken.roles.includes(role)
+      ) {
+        console.log('conditions met')
+        next();
+      } else {
+        console.log('conditions NOT MET')
+        res.status(403).json({message:'Not Authorized'})
+      }
+  }
+}
+
 
 function generateToken(user){
   const payload = {
